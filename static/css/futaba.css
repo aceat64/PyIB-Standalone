@@ -148,3 +148,11 @@ a:hover {
 	color:#800000;
 	border: 2px dashed #EEAA88;
 }
+
+h2 {
+	margin-top: 0px;
+	margin-left: 0px;
+	font-size: 100%;
+	background:#EEAA88;
+	color:#800000;
+}

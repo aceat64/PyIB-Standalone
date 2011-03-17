@@ -1,0 +1,9 @@
+<?py include('templates/base_top.html') ?>
+<?py for story in news: ?>
+	<br>
+	<h2>#{story['subject']} | <i>#{story['name']}</i> | <i>#{story['timestamp_formatted']}</i></h2>
+	#{story['message']}
+	<br>
+<?py #endfor ?>
+<hr>
+<?py include('templates/base_bottom.html') ?>

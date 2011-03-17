@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS `news` (
   `name` varchar(255) NOT NULL,
   `subject` varchar(255) NOT NULL,
   `message` text NOT NULL,
+  `timestamp_formatted` varchar(50) NOT NULL,
   `timestamp` int(20) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   KEY `timestamp` (`timestamp`)

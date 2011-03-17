@@ -36,6 +36,8 @@
       <img src="#{banner_url}" width="#{banner_width}" height="#{banner_height}" alt="Logo"><br>
 <?py if board: ?>
       /#{board}/ - #{board_name}
+<?py else: ?>
+      #{title}
 <?py #endif ?>
     </div>
     <hr width="90%" size="1">

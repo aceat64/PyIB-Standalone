@@ -571,6 +571,7 @@ def manage(self, path_split):
                         UpdateDb("UPDATE `news` SET `subject` = '" + _mysql.escape_string(self.formdata['subject']) + "', `message` = '" + _mysql.escape_string(self.formdata['message']) + "' WHERE `id` = " + story['id'] + " LIMIT 1")
                         page += 'News story updated.'
                         logAction(staff_account['username'], 'Updated news story, subject: ' + _mysql.escape_string(self.formdata['subject']))
+                        renderBlog()
                   except:
                     pass
             else:
@@ -578,9 +579,10 @@ def manage(self, path_split):
               try:
                 if self.formdata['subject'] != '' and self.formdata['message'] != '':
                   action_taken = True
-                  InsertDb("INSERT INTO `news` (`name`, `subject`, `message`, `timestamp`) VALUES ('" + staff_account['username'] + "', '" + _mysql.escape_string(self.formdata['subject']) + "', '" + _mysql.escape_string(self.formdata['message']) + "', " + str(timestamp()) + ")")
+                  InsertDb("INSERT INTO `news` (`name`, `subject`, `message`, `timestamp_formatted`, `timestamp`) VALUES ('" + staff_account['username'] + "', '" + _mysql.escape_string(self.formdata['subject']) + "', '" + _mysql.escape_string(self.formdata['message']) + "', '" + formatTimestamp(timestamp()) + "', " + str(timestamp()) + ")")
                   page += 'News story added.'
                   logAction(staff_account['username'], 'Added news story, subject: ' + _mysql.escape_string(self.formdata['subject']))
+                  renderBlog()
               except:
                 pass
 
@@ -608,16 +610,20 @@ def manage(self, path_split):
                 UpdateDb('DELETE FROM `news` WHERE `id` = ' + _mysql.escape_string(path_split[4]) + ' LIMIT 1')
                 page += 'News story deleted.'
                 logAction(staff_account['username'], 'Deleted news story, subject: ' + story['subject'])
+                renderBlog()
               else:
                 page += 'Unable to locate a story with that ID.'
             except:
               pass
+          elif path_split[3] == 'rebuild':
+            renderBlog()
+            page += 'Blog rebuilt.<br>'
+            logAction(staff_account['username'], 'Rebuilt the blog')
         if not action_taken:
-          page += '<a href="' + Settings.CGI_URL + 'manage/blog/add">Add new story</a><br>'
+          page += '<a href="' + Settings.CGI_URL + 'manage/blog/add">Add new story</a> | <a href="' + Settings.CGI_URL + 'manage/blog/rebuild">Rebuild Blog</a><br>'
           news = FetchAll('SELECT * FROM `news` ORDER BY `timestamp` DESC')
           for story in news:
-            page += '<br><b>' + story['subject'] + '</b> [<a href="' + Settings.CGI_URL + 'manage/blog/edit/' + story['id'] + '">edit</a>] [<a href="' + Settings.CGI_URL + 'manage/blog/delete/' + story['id'] + '">delete</a>]<br>' + \
-            'by <i>' + story['name'] + '</i> at <i>' + story['timestamp'] + '</i><br>' + \
+            page += '<br><h2>' + story['subject'] + ' | <i>' + story['name'] + '</i> | <i>' + story['timestamp_formatted'] + '</i> [<a href="' + Settings.CGI_URL + 'manage/blog/edit/' + story['id'] + '">edit</a>] [<a href="' + Settings.CGI_URL + 'manage/blog/delete/' + story['id'] + '">delete</a>]</h2>' + \
             story['message'] + '<br>'
     else:
       page += "I'll think of something to put on the manage home."
@@ -649,3 +655,13 @@ def boardlist(action):
   for board in boards:
     page += '<br><a href="' + Settings.CGI_URL + 'manage/' + action + '/' + board['dir'] + '">/' + board['dir'] + '/ - ' + board['name'] + '</a>'
   return page
+
+def renderBlog():
+  stories = FetchAll('SELECT * FROM `news` ORDER BY `timestamp` DESC')
+  news = {'news': stories}
+  news_rendered = renderTemplate('news.html', news)
+  f = open(Settings.ROOT_DIR + "/news.html", "w")
+  try:
+    f.write(news_rendered)
+  finally:
+    f.close()
