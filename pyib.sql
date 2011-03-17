@@ -73,4 +73,14 @@ CREATE TABLE `staff` (
   KEY `username` (`username`,`password`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `news` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `timestamp` int(20) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `timestamp` (`timestamp`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+
 INSERT INTO `staff` (`username`, `password`, `added`, `lastactive`, `rights`, `boards`) VALUES ('admin', '21232f297a57a5a743894a0e4a801fc3', UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), 0, '');
