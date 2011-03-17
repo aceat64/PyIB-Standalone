@@ -546,6 +546,79 @@ def manage(self, path_split):
         page += 'Logging out...<meta http-equiv="refresh" content="0;url=' + Settings.CGI_URL + 'manage">'
         setCookie(self, 'pyib_manage', '', domain='THIS')
         setCookie(self, 'pyib_staff', '')
+      elif path_split[2] == 'blog':
+        if staff_account['rights'] >= '2':
+          return
+        action_taken = False
+
+        if len(path_split) > 3:
+          if path_split[3] == 'add' or path_split[3] == 'edit':
+            subject = ''
+            message = ''
+
+            if path_split[3] == 'edit':
+              if len(path_split) > 4:
+                story = FetchOne('SELECT * FROM `news` WHERE `id` = ' + _mysql.escape_string(path_split[4]) + ' LIMIT 1')
+                if story:
+                  subject = story['subject']
+                  message = story['message']
+                  action = 'edit/' + story['id']
+                  
+                  try:
+                    if self.formdata['subject'] != '':
+                      if self.formdata['message'] != '':
+                        action_taken = True
+                        UpdateDb("UPDATE `news` SET `subject` = '" + _mysql.escape_string(self.formdata['subject']) + "', `message` = '" + _mysql.escape_string(self.formdata['message']) + "' WHERE `id` = " + story['id'] + " LIMIT 1")
+                        page += 'News story updated.'
+                        logAction(staff_account['username'], 'Updated news story, subject: ' + _mysql.escape_string(self.formdata['subject']))
+                  except:
+                    pass
+            else:
+              action = 'add'
+              try:
+                if self.formdata['subject'] != '' and self.formdata['message'] != '':
+                  action_taken = True
+                  InsertDb("INSERT INTO `news` (`name`, `subject`, `message`, `timestamp`) VALUES ('" + staff_account['username'] + "', '" + _mysql.escape_string(self.formdata['subject']) + "', '" + _mysql.escape_string(self.formdata['message']) + "', " + str(timestamp()) + ")")
+                  page += 'News story added.'
+                  logAction(staff_account['username'], 'Added news story, subject: ' + _mysql.escape_string(self.formdata['subject']))
+              except:
+                pass
+
+            if not action_taken:
+              action_taken = True
+               
+              page += '<form action="' + Settings.CGI_URL + 'manage/blog/' + action + '" method="post">' + \
+              '<label for="subject">Subject</label> <input type="text" name="subject" value="' + subject+ '"><br>' + \
+              '<label for="message">Message</label> <textarea name="message">' + message+ '</textarea><br>'
+              page += '<label for="submit">&nbsp;</label> <input type="submit" name="submit" value="'
+              if path_split[3] == 'add':
+                page += 'Add'
+              else:
+                page += 'Edit'
+              page += '">' + \
+              '</form>'
+          elif path_split[3] == 'delete':
+            action_taken = True
+            page += '<a href="' + Settings.CGI_URL + 'manage/blog/delete_confirmed/' + path_split[4] + '">Click here to confirm the deletion of that story</a>'
+          elif path_split[3] == 'delete_confirmed':
+            try:
+              action_taken = True
+              story = FetchOne('SELECT `subject` FROM `news` WHERE `id` = ' + _mysql.escape_string(path_split[4]) + ' LIMIT 1')
+              if story:
+                UpdateDb('DELETE FROM `news` WHERE `id` = ' + _mysql.escape_string(path_split[4]) + ' LIMIT 1')
+                page += 'News story deleted.'
+                logAction(staff_account['username'], 'Deleted news story, subject: ' + story['subject'])
+              else:
+                page += 'Unable to locate a story with that ID.'
+            except:
+              pass
+        if not action_taken:
+          page += '<a href="' + Settings.CGI_URL + 'manage/blog/add">Add new story</a><br>'
+          news = FetchAll('SELECT * FROM `news` ORDER BY `timestamp` DESC')
+          for story in news:
+            page += '<br><b>' + story['subject'] + '</b> [<a href="' + Settings.CGI_URL + 'manage/blog/edit/' + story['id'] + '">edit</a>] [<a href="' + Settings.CGI_URL + 'manage/blog/delete/' + story['id'] + '">delete</a>]<br>' + \
+            'by <i>' + story['name'] + '</i> at <i>' + story['timestamp'] + '</i><br>' + \
+            story['message'] + '<br>'
     else:
       page += "I'll think of something to put on the manage home."
 
